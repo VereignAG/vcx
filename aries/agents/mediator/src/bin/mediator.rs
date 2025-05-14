@@ -29,10 +29,15 @@ async fn main() {
     let mut agent = AgentBuilder::<AskarWallet>::new_from_wallet_config(wallet_config)
         .await
         .unwrap();
+    let credo_compatible: bool = std::env::var("CREDO_COMPATIBLE")
+        .unwrap_or("false".into())
+        .parse()
+        .unwrap();
     agent
         .init_service(
             vec![],
             format!("http://{endpoint_root}/didcomm").parse().unwrap(),
+            credo_compatible
         )
         .await
         .unwrap();

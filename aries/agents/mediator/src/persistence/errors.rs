@@ -60,3 +60,5 @@ error_compose!(ListRecipientKeysError[StorageBackendError, AccountNotFound]);
 error_compose!(PersistForwardMessageError[StorageBackendError, AccountNotFound]);
 error_compose!(RetrievePendingMessageCountError[StorageBackendError, AccountNotFound]);
 error_compose!(RetrievePendingMessagesError[StorageBackendError, AccountNotFound]);
+
+pub type RemoveMessagesError = RetrievePendingMessagesError;

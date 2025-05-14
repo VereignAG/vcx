@@ -31,7 +31,7 @@ async fn test_forward_flow() -> Result<()> {
     )
     .await;
     agent
-        .init_service(grant_data.routing_keys, grant_data.endpoint.parse()?)
+        .init_service(grant_data.routing_keys, grant_data.endpoint.parse()?, false)
         .await?;
     // register recipient key with mediator
     let (_agent_recipient_key, agent_diddoc) = gen_and_register_recipient_key(

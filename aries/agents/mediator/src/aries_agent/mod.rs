@@ -19,6 +19,10 @@ use messages::{
         connection::{request::Request, response::Response, Connection},
         out_of_band::invitation::Invitation as OOBInvitation,
     },
+    msg_types::{
+        connection::{ConnectionType, ConnectionTypeV1},
+        Protocol,
+    },
     AriesMessage,
 };
 use serde_json::json;
@@ -87,13 +91,19 @@ impl<T: BaseWallet, P: MediatorPersistence> Agent<T, P> {
         &mut self,
         routing_keys: Vec<String>,
         service_endpoint: url::Url,
+        credo_compatible: bool,
     ) -> Result<(), VcxWalletError> {
         let did_data = self.wallet.create_and_store_my_did(None, None).await?;
         let service = AriesService {
             id: "#inline".to_owned(),
             type_: "did-communication".to_owned(),
             priority: 0,
-            recipient_keys: vec![did_data.verkey().base58()],
+            recipient_keys:
+                if credo_compatible {
+                    vec![format!("did:key:{}", did_data.verkey().fingerprint())]
+                } else {
+                    vec![did_data.verkey().base58()]
+                },
             routing_keys,
             service_endpoint,
         };
@@ -105,13 +115,18 @@ impl<T: BaseWallet, P: MediatorPersistence> Agent<T, P> {
         &mut self,
         routing_keys: Vec<String>,
         service_endpoint: url::Url,
+        credo_compatible: bool,
     ) -> Result<(), VcxWalletError> {
-        self.reset_service(routing_keys, service_endpoint).await
+        self.reset_service(routing_keys, service_endpoint, credo_compatible).await
     }
     pub fn get_oob_invite(&self) -> Result<OOBInvitation, String> {
         if let Some(service) = &self.service {
             let invitation = OutOfBandSender::create()
                 .append_service(&OobService::AriesService(service.clone()))
+                .append_handshake_protocol(Protocol::ConnectionType(ConnectionType::V1(
+                    ConnectionTypeV1::new_v1_0(),
+                )))
+                .unwrap()
                 .oob;
             Ok(invitation)
         } else {
@@ -252,6 +267,7 @@ mod test {
             .init_service(
                 vec![],
                 "http://127.0.0.1:8005/aries".to_string().parse().unwrap(),
+                false
             )
             .await
             .unwrap();

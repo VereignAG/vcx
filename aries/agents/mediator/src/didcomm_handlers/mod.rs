@@ -1,8 +1,10 @@
 use std::fmt::Debug;
 
+use aries_vcx::protocols::trustping::build_ping_response;
 use aries_vcx_wallet::wallet::base_wallet::BaseWallet;
 use axum::{body::Bytes, extract::State, Json};
 use messages::AriesMessage;
+use messages::msg_fields::protocols::trust_ping::TrustPing;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use utils::prelude::*;
@@ -66,6 +68,10 @@ pub async fn handle_aries<T: BaseWallet, P: MediatorPersistence>(
                         handle_mediation_coord(&agent, coord_message, &account_details.auth_pubkey)
                             .await?;
                     AriesMessage::CoordinateMediation(coord_response)
+                }
+                GeneralAriesMessage::AriesVCXSupported(AriesMessage::TrustPing(TrustPing::Ping(trust_ping))) => {
+                    let ping_response = build_ping_response(&trust_ping);
+                    AriesMessage::TrustPing(TrustPing::PingResponse(ping_response))
                 }
                 GeneralAriesMessage::AriesVCXSupported(aries_message) => {
                     Err(unhandled_aries_message(aries_message))?
