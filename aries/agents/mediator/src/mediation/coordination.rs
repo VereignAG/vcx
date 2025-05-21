@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::sync::Arc;
-use log::info;
 use public_key::Key;
 use messages::{decorators::thread::Thread, msg_fields::protocols::coordinate_mediation::{
     keylist::KeylistItem,
@@ -14,7 +13,6 @@ use messages::{decorators::thread::Thread, msg_fields::protocols::coordinate_med
     MediateGrant, MediateGrantContent, MediateGrantDecorators,
 }, msg_parts::MsgParts};
 use uuid::Uuid;
-
 use crate::persistence::MediatorPersistence;
 
 const DID_KEY_PREFIX: &str = "did:key:";
@@ -111,17 +109,8 @@ pub async fn handle_keylist_update<T: MediatorPersistence>(
     for update_item in updates.into_iter() {
         let result = match &update_item.action {
             KeylistUpdateItemAction::Add => {
-                let key_b58 = if update_item.recipient_key.starts_with(DID_KEY_PREFIX) {
-                    let key_result = Key::from_fingerprint(update_item.recipient_key.strip_prefix(DID_KEY_PREFIX).unwrap());
-                    match key_result {
-                        Ok(key) => {
-                            Key::base58(&key)
-                        },
-                        Err(err) => {
-                            info!("Error creating key from fingerprint: {:?}", err);
-                            update_item.recipient_key.clone()
-                        }
-                    }
+                let key_b58 = if let Some(stripped_key) = update_item.recipient_key.strip_prefix(DID_KEY_PREFIX) {
+                    Key::from_fingerprint(stripped_key).unwrap().base58()
                 } else {
                     update_item.recipient_key.clone()
                 };
@@ -130,17 +119,8 @@ pub async fn handle_keylist_update<T: MediatorPersistence>(
                     .await
             }
             KeylistUpdateItemAction::Remove => {
-                let key_b58 = if update_item.recipient_key.starts_with(DID_KEY_PREFIX) {
-                    let key_result = Key::from_fingerprint(update_item.recipient_key.strip_prefix(DID_KEY_PREFIX).unwrap());
-                    match key_result {
-                        Ok(key) => {
-                            Key::base58(&key)
-                        },
-                        Err(err) => {
-                            info!("Error creating key from fingerprint: {:?}", err);
-                            update_item.recipient_key.clone()
-                        }
-                    }
+                let key_b58 = if let Some(stripped_key) = update_item.recipient_key.strip_prefix(DID_KEY_PREFIX) {
+                    Key::from_fingerprint(stripped_key).unwrap().base58()
                 } else {
                     update_item.recipient_key.clone()
                 };

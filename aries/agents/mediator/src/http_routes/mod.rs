@@ -9,7 +9,6 @@ use axum::{
     routing::get,
     Json, Router,
 };
-use messages::AriesMessage;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -33,12 +32,11 @@ pub async fn oob_invite_json(
     Json(serde_json::to_value(oob).unwrap())
 }
 
-pub async fn oob_aries_invite_json(
+pub async fn oob_invite_url(
     State(agent): State<ArcAgent<impl BaseWallet, impl MediatorPersistence>>,
 ) -> Json<Value> {
-    let oob = agent.get_oob_invite().unwrap();
-    let msg = AriesMessage::from(oob);
-    Json(serde_json::to_value(msg).unwrap())
+    let url = agent.get_oob_invite_url().unwrap();
+    Json(serde_json::to_value(url).unwrap())
 }
 
 pub async fn handle_didcomm(
@@ -73,7 +71,7 @@ pub async fn build_router(
     Router::default()
         .route("/", get(readme))
         .route("/invitation", get(oob_invite_json))
-        .route("/aries-invitation", get(oob_aries_invite_json))
+        .route("/invitation-url", get(oob_invite_url))
         .route("/didcomm", get(handle_didcomm).post(handle_didcomm))
         .layer(tower_http::catch_panic::CatchPanicLayer::new())
         .with_state(Arc::new(agent))

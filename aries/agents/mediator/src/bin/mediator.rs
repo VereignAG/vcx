@@ -2,6 +2,7 @@ use aries_vcx_wallet::wallet::askar::{
     askar_wallet_config::AskarWalletConfig, key_method::KeyMethod, AskarWallet,
 };
 use log::info;
+use url::Url;
 use mediator::aries_agent::AgentBuilder;
 use uuid::Uuid;
 
@@ -36,7 +37,7 @@ async fn main() {
     agent
         .init_service(
             vec![],
-            format!("http://{endpoint_root}/didcomm").parse().unwrap(),
+            get_service_endpoint(endpoint_root.clone()),
             credo_compatible
         )
         .await
@@ -56,4 +57,10 @@ fn setup_logging() {
 
 fn load_dot_env() {
     let _ = dotenvy::dotenv();
+}
+
+fn get_service_endpoint(endpoint_root: String) -> Url {
+    let endpoint: String = std::env::var("MEDIATOR_ADDRESS")
+        .unwrap_or(format!("http://{endpoint_root}"));
+    format!("{endpoint}/didcomm").parse().unwrap()
 }
