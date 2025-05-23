@@ -32,6 +32,13 @@ pub async fn oob_invite_json(
     Json(serde_json::to_value(oob).unwrap())
 }
 
+pub async fn oob_invite_url(
+    State(agent): State<ArcAgent<impl BaseWallet, impl MediatorPersistence>>,
+) -> Json<Value> {
+    let url = agent.get_oob_invite_url().unwrap();
+    Json(serde_json::to_value(url).unwrap())
+}
+
 pub async fn handle_didcomm(
     State(agent): State<ArcAgent<impl BaseWallet, impl MediatorPersistence>>,
     didcomm_msg: Bytes,
@@ -64,6 +71,7 @@ pub async fn build_router(
     Router::default()
         .route("/", get(readme))
         .route("/invitation", get(oob_invite_json))
+        .route("/invitation-url", get(oob_invite_url))
         .route("/didcomm", get(handle_didcomm).post(handle_didcomm))
         .layer(tower_http::catch_panic::CatchPanicLayer::new())
         .with_state(Arc::new(agent))

@@ -35,6 +35,7 @@ cargo run --package client-tui 2> err || cat  err
 
 ```bash
 # To run automated tests, you should have a mediator already running
+# Please check the configuration section for test compatibility
 # # Terminal 1
 cargo run --bin mediator
 # # Terminal 2
@@ -102,6 +103,21 @@ Currently the mediator reads the following environment variables.
 - **Description**: MySQL url for the MYSQL database used for mediator persistence. 
 - **Default**: - (This is required!)
 - **Usage**: `MYSQL_URL=mysql://admin:password1235@localhost:3306/mediator-persistence.db`
+
+`MEDIATOR_ADDRESS`:
+- **Description**: This is the public address of the mediator.
+  If you are running the mediator behind a reverse proxy, you should set this to the public address of the reverse proxy.
+  This configuration is Optional.
+- **Default**: - None (don't set if you don't want to use public address)
+- **Usage**: `MEDIATOR_ADDRESS=https://example.com:8005/mediator`
+
+`CREDO_COMPATIBLE`:
+- **Description**: Flag to enable or disable the use of Credo-ts framework compatible messages.
+  This configuration is Optional.
+- **Default**: - false
+- **Usage**: `CREDO_COMPATIBLE=false`
+- **IMPORTANT**: Currently this configuration is not compatible with tests
+  and will cause the tests to fail. Client code is not yet compatible with this configuration.
 ```
 
 ### Configurable Features
@@ -123,6 +139,17 @@ Currently exposed endpoints.
 - **Description** : |
     Returns OOB invitation in json format.
     Shows an Aries Out Of Band (OOB) invitation which can be used to connect to the mediator using a conformant Aries Agent.
+```
+
+```yaml
+`/invitation-url`:
+- **Description** : |
+    Returns OOB invitation as a url in json format.
+    Shows an Aries Out Of Band (OOB) invitation url which can be used to connect to the mediator using a conformant Aries Agent.
+    Example response:
+      {
+        "invitation": `https://<domain>{:<port>}/{<path>}?oob=<base64-encoded-invitation>`
+      }
 ```
 
 ```yaml

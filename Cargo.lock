@@ -3411,6 +3411,7 @@ dependencies = [
  "futures",
  "log",
  "messages",
+ "public_key",
  "reqwest 0.12.15",
  "serde",
  "serde_json",

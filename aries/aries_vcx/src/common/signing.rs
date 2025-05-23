@@ -9,6 +9,8 @@ use time;
 
 use crate::{errors::error::prelude::*, utils::base64::URL_SAFE_LENIENT};
 
+const DID_KEY_PREFIX: &str = "did:key:";
+
 // Utility function to handle both padded and unpadded Base64URL data
 fn base64url_decode(encoded: &str) -> VcxResult<Vec<u8>> {
     URL_SAFE_LENIENT.decode(encoded).map_err(|err| {
@@ -28,9 +30,15 @@ async fn get_signature_data(
     let mut sig_data = now.to_be_bytes().to_vec();
     sig_data.extend(data.as_bytes());
 
-    let signature = wallet
-        .sign(&Key::from_base58(key, KeyType::Ed25519)?, &sig_data)
-        .await?;
+    let signature: Vec<u8> = if let Some(stripped_key) = key.strip_prefix(DID_KEY_PREFIX) {
+        wallet
+            .sign(&Key::from_fingerprint(stripped_key)?, &sig_data)
+            .await?
+    } else {
+        wallet
+            .sign(&Key::from_base58(key, KeyType::Ed25519)?, &sig_data)
+            .await?
+    };
 
     Ok((signature, sig_data))
 }
@@ -46,7 +54,13 @@ pub async fn sign_connection_response(
     let sig_data = URL_SAFE_LENIENT.encode(sig_data);
     let signature = URL_SAFE_LENIENT.encode(signature);
 
-    let connection_sig = ConnectionSignature::new(signature, sig_data, key.to_string());
+    let key_b58 = if let Some(stripped_key) = key.strip_prefix(DID_KEY_PREFIX) {
+        Key::from_fingerprint(stripped_key)?.base58()
+    } else {
+        key.to_string()
+    };
+
+    let connection_sig = ConnectionSignature::new(signature, sig_data, key_b58);
 
     Ok(connection_sig)
 }
