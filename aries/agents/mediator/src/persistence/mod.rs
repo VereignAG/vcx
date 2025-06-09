@@ -7,11 +7,12 @@ use async_trait::async_trait;
 /// Database backend is used for default implementation of MediatorPersistence trait
 pub use database::get_db_pool as get_persistence;
 use diddoc_legacy::aries::diddoc::AriesDidDoc;
-
+use crate::persistence::errors::SetDeviceInfoError;
 use self::errors::{
     AddRecipientError, CreateAccountError, GetAccountDetailsError, GetAccountIdError,
     ListAccountsError, ListRecipientKeysError, PersistForwardMessageError, RemoveMessagesError,
     RemoveRecipientError, RetrievePendingMessageCountError, RetrievePendingMessagesError,
+    RetrieveDeviceInfoError
 };
 use crate::utils::structs::VerKey;
 
@@ -63,7 +64,17 @@ pub trait MediatorPersistence: Send + Sync + 'static {
         &self,
         auth_pubkey: &str,
     ) -> Result<AccountDetails, GetAccountDetailsError>;
+    /// Removes messages by their IDs
     async fn remove_messages(&self, message_ids: Vec<String>) -> Result<(), RemoveMessagesError>;
+    /// Returns device info (account_id, token, platform)
+    async fn retrieve_device_info(&self, auth_pubkey: &str) -> Result<DeviceInfo, RetrieveDeviceInfoError>;
+    /// Stores or updates device info (account_id, token, platform)
+    async fn set_device_info(
+        &self,
+        auth_pubkey: &str,
+        token: Option<String>,
+        platform: Option<String>,
+    ) -> Result<(), SetDeviceInfoError>;
 }
 
 #[derive(Debug)]
@@ -76,4 +87,28 @@ pub struct AccountDetails {
     pub auth_pubkey: VerKey,
     pub our_signing_key: VerKey,
     pub their_did_doc: AriesDidDoc,
+}
+
+#[derive(Debug, Default)]
+pub struct DeviceInfo {
+    // Unique ID for account
+    pub account_id: Vec<u8>,
+    // Token for push notifications - null if not set
+    pub token: Option<String>,
+    // Platform for push notifications (e.g., "android", "ios") - null if not set
+    pub platform: Option<String>,
+}
+
+impl DeviceInfo {
+    pub fn new(
+        account_id: Vec<u8>,
+        token: Option<String>,
+        platform: Option<String>,
+    ) -> Self {
+        Self {
+            account_id,
+            token,
+            platform,
+        }
+    }
 }

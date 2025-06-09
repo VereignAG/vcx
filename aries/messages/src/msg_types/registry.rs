@@ -22,8 +22,10 @@ use crate::msg_types::{
         routing::RoutingTypeV1,
         signature::SignatureTypeV1,
         trust_ping::TrustPingTypeV1,
+        push_notifications_fcm::PushNotificationsFCMTypeV1
     },
 };
+
 type RegistryMap = HashMap<(&'static str, u8), Vec<RegistryEntry>>;
 
 /// An entry in the protocol registry.
@@ -98,6 +100,7 @@ lazy_static! {
         map_insert(&mut m, extract_parts!(CoordinateMediationTypeV1::new_v1_0()));
         map_insert(&mut m, extract_parts!(DidExchangeTypeV1::new_v1_0()));
         map_insert(&mut m, extract_parts!(DidExchangeTypeV1::new_v1_1()));
+        map_insert(&mut m, extract_parts!(PushNotificationsFCMTypeV1::new_v1_0()));
         m
     };
 }

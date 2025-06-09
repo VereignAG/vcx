@@ -18,7 +18,7 @@ pub struct QueryContent {
 }
 
 impl QueryContent {
-    /// Looks up into the [`PROTOCOL_REGISTRY`] and returns a [`Vec<ProtocolDescriptor`] matching
+    /// Looks up into the [`PROTOCOL_REGISTRY`] and returns a [`Vec<ProtocolDescriptor>`] matching
     /// the inner query.
     pub fn lookup(&self) -> Vec<ProtocolDescriptor> {
         let mut protocols = Vec::new();
