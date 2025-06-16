@@ -14,11 +14,13 @@ mod forward;
 mod mediator_coord;
 mod pickup;
 mod utils;
+mod push_notification_fcm;
 
 use connection::handle_aries_connection;
 use forward::handle_routing_forward;
 use mediator_coord::handle_mediation_coord;
 use pickup::handle_pickup_protocol;
+use push_notification_fcm::handle_push_notification_fcm_protocol;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -72,6 +74,12 @@ pub async fn handle_aries<T: BaseWallet, P: MediatorPersistence>(
                 GeneralAriesMessage::AriesVCXSupported(AriesMessage::TrustPing(TrustPing::Ping(trust_ping))) => {
                     let ping_response = build_ping_response(&trust_ping);
                     AriesMessage::TrustPing(TrustPing::PingResponse(ping_response))
+                }
+                GeneralAriesMessage::AriesVCXSupported(AriesMessage::PushNotificationsFCM(push_notification_fcm)) => {
+                    let device_info =
+                        handle_push_notification_fcm_protocol(&agent, push_notification_fcm, &account_details.auth_pubkey)
+                            .await?;
+                    AriesMessage::PushNotificationsFCM(device_info)
                 }
                 GeneralAriesMessage::AriesVCXSupported(aries_message) => {
                     Err(unhandled_aries_message(aries_message))?

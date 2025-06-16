@@ -20,6 +20,7 @@ use messages::{
         report_problem::ProblemReport,
         revocation::Revocation,
         trust_ping::TrustPing,
+        push_notifications_fcm::PushNotificationsFCM,
     },
     AriesMessage,
 };
@@ -261,6 +262,18 @@ pub fn verify_thread_id(thread_id: &str, message: &AriesMessage) -> VcxResult<()
         AriesMessage::DidExchange(DidExchange::V1_1(DidExchangeV1_1::Response(msg))) => {
             matches_thread_id!(msg, thread_id)
         }
+        AriesMessage::PushNotificationsFCM(PushNotificationsFCM::DeviceInfo(msg)) => {
+            matches_opt_thread_id!(msg, thread_id)
+        },
+        AriesMessage::PushNotificationsFCM(PushNotificationsFCM::SetDeviceInfo(msg)) => {
+            msg.id == thread_id
+        },
+        AriesMessage::PushNotificationsFCM(PushNotificationsFCM::GetDeviceInfo(msg)) => {
+            msg.id == thread_id
+        },
+        AriesMessage::PushNotificationsFCM(PushNotificationsFCM::ReportProblem(msg)) => {
+            msg.id == thread_id
+        },
     };
 
     if !is_match {

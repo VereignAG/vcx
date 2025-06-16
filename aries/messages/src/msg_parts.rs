@@ -28,7 +28,7 @@ pub struct MsgParts<C, D = NoDecorators> {
     pub decorators: D,
 }
 
-/// Allows building message without decorators being specified.
+/// Allows building message without content being specified.
 #[allow(dead_code, non_camel_case_types, missing_docs)]
 impl<C, D> MsgPartsBuilder<C, D, ((String,), (), (D,))>
 where

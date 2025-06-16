@@ -101,7 +101,7 @@ With that in mind, a crude list of steps for extending the crate would be:
 - changes in the `msg_types` module:
     - adding/extending data types to represent the new protocol / protocol version
     - if adding the first version of a new protocol, extend the `Protocol` enum
-    - add an entry to the `PROTOCOL_REGISTRY`
+    - add an entry to the `PROTOCOL_REGISTRY` in the [registry file](./src/msg_types/registry.rs)
 - changes in the `msg_fields` module:
     - adding/extending data types to represent the message content and message decorators
 - if adding the first version of a new protocol, extend the `AriesMessage` enum

@@ -24,6 +24,8 @@ use crate::{
     },
     utils::structs::VerKey,
 };
+use crate::persistence::DeviceInfo;
+use crate::persistence::errors::{DeviceInfoNotFound, RetrieveDeviceInfoError, SetDeviceInfoError};
 
 pub async fn get_db_pool() -> MySqlPool {
     let _ = dotenvy::dotenv();
@@ -441,5 +443,75 @@ impl MediatorPersistence for sqlx::MySqlPool {
                 .map(|row| row.get("recipient_key"))
                 .collect();
         Ok(recipient_keys)
+    }
+
+    async fn retrieve_device_info(
+        &self,
+        auth_pubkey: &str,
+    ) -> Result<DeviceInfo, RetrieveDeviceInfoError> {
+        info!("Retrieving device info for auth_pubkey {:#?}", auth_pubkey);
+        let account_id: Vec<u8> = self
+            .get_account_id(auth_pubkey)
+            .await
+            .map_err(|e| match e {
+                GetAccountIdError::AccountNotFound(anf) => anf.into(),
+                GetAccountIdError::StorageBackendError(s) => s.into(),
+                GetAccountIdError::ZFhOt01Rdb0Error(anye) => {
+                    RetrieveDeviceInfoError::ZFhOt01Rdb0Error(
+                        anye.context(format!("Retrieve device info: couldn't get account id for pubkey {auth_pubkey}")),
+                    )
+                }
+            })?;
+        let device_info = sqlx::query("SELECT * FROM devices WHERE account_id = ?;")
+            .bind(&account_id)
+            .fetch_one(self)
+            .await
+            .map_err(|e| match e {
+                sqlx::Error::RowNotFound => RetrieveDeviceInfoError::DeviceInfoNotFound(
+                    DeviceInfoNotFound(format!("auth_pubkey={}", auth_pubkey.to_owned())),
+                ),
+                _ => StorageBackendError { source: e.into() }.into(),
+            }).map(|row| {
+            DeviceInfo::new(
+                row.try_get("account_id").unwrap(),
+                row.try_get("token").ok(),     // Handles NULL safely
+                row.try_get("platform").ok(),  // Handles NULL safely
+            )
+        });
+        device_info
+    }
+
+    async fn set_device_info(
+        &self,
+        auth_pubkey: &str,
+        token: Option<String>,
+        platform: Option<String>,
+    ) -> Result<(), SetDeviceInfoError> {
+        info!("Setting device info for auth_pubkey {:#?}", auth_pubkey);
+        let account_id: Vec<u8> = self
+            .get_account_id(auth_pubkey)
+            .await
+            .map_err(|e| match e {
+                GetAccountIdError::AccountNotFound(anf) => anf.into(),
+                GetAccountIdError::StorageBackendError(s) => s.into(),
+                GetAccountIdError::ZFhOt01Rdb0Error(anye) => {
+                    SetDeviceInfoError::ZFhOt01Rdb0Error(
+                        anye.context(format!("Set device info: couldn't get account id for pubkey {auth_pubkey}")),
+                    )
+                }
+            })?;
+        sqlx::query("INSERT INTO devices (account_id, token, platform) VALUES (?, ?, ?)
+                        ON DUPLICATE KEY UPDATE token = ?, platform = ?;")
+            .bind(&account_id)
+            .bind(token.clone())
+            .bind(platform.clone())
+            .bind(token)
+            .bind(platform)
+            .execute(self)
+            .await
+            .map_err(|e| {
+                anyhow!(e).context("Error while inserting device info into the database")
+            })?;
+        Ok(())
     }
 }

@@ -16,6 +16,7 @@ use crate::{
     error::{MsgTypeError, MsgTypeResult},
     msg_types::traits::ProtocolName,
 };
+use crate::msg_types::protocols::push_notifications_fcm::PushNotificationsFCMType;
 
 pub mod basic_message;
 pub mod connection;
@@ -32,6 +33,7 @@ pub mod revocation;
 pub mod routing;
 pub mod signature;
 pub mod trust_ping;
+pub mod push_notifications_fcm;
 
 /// Type representing all protocols that are currently supported.
 ///
@@ -65,6 +67,7 @@ pub enum Protocol {
     PickupType(PickupType),
     CoordinateMediationType(CoordinateMediationType),
     DidExchangeType(DidExchangeType),
+    PushNotificationsFCMType(PushNotificationsFCMType),
 }
 
 /// Utility macro to avoid harder to read and error prone calling
@@ -103,6 +106,8 @@ impl Protocol {
         match_protocol!(PickupType, protocol, major, minor);
         match_protocol!(CoordinateMediationType, protocol, major, minor);
         match_protocol!(DidExchangeType, protocol, major, minor);
+        match_protocol!(PushNotificationsFCMType, protocol, major, minor);
+
 
         Err(MsgTypeError::unknown_protocol(protocol.to_owned()))
     }
@@ -125,6 +130,7 @@ impl Protocol {
             Self::PickupType(v) => v.as_protocol_parts(),
             Self::CoordinateMediationType(v) => v.as_protocol_parts(),
             Self::DidExchangeType(v) => v.as_protocol_parts(),
+            Self::PushNotificationsFCMType(v) => v.as_protocol_parts(),
         }
     }
 

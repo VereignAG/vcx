@@ -89,6 +89,16 @@ To wind down services
 docker compose down
 ```
 
+Executing migrations
+
+DB migrations are executed automatically when the database container is started for the first time.
+For DEVELOPMENT PURPOSES, you can run migrations again by removing the database docker volume before starting
+the DB container like this:
+```bash
+docker volume rm mediator_db_data
+```
+In case of production, you should manually run migrations against your database before re/starting the mediator service.
+
 ### Configurable Options
 
 Currently the mediator reads the following environment variables.

@@ -4,6 +4,10 @@ use thiserror::Error;
 #[error("No account found matching given input: {0}")]
 pub struct AccountNotFound(pub String);
 
+#[derive(Error, Debug)]
+#[error("No device info found for account id: {0}")]
+pub struct DeviceInfoNotFound(pub String);
+
 /// Error closely related to the storage backend
 #[derive(Error, Debug)]
 #[error(transparent)]
@@ -62,3 +66,6 @@ error_compose!(RetrievePendingMessageCountError[StorageBackendError, AccountNotF
 error_compose!(RetrievePendingMessagesError[StorageBackendError, AccountNotFound]);
 
 pub type RemoveMessagesError = RetrievePendingMessagesError;
+
+error_compose!(SetDeviceInfoError[StorageBackendError, AccountNotFound, DecodeError]);
+error_compose!(RetrieveDeviceInfoError[GetAccountIdError, DeviceInfoNotFound, StorageBackendError, AccountNotFound, DecodeError]);

@@ -38,7 +38,7 @@ use crate::{
             coordinate_mediation::CoordinateMediation, discover_features::DiscoverFeatures,
             notification::Notification, out_of_band::OutOfBand, present_proof::v1::PresentProofV1,
             report_problem::ProblemReport, revocation::Revocation, routing::Forward,
-            trust_ping::TrustPing,
+            trust_ping::TrustPing, push_notifications_fcm::PushNotificationsFCM
         },
         traits::DelayedSerde,
     },
@@ -76,6 +76,7 @@ pub enum AriesMessage {
     Pickup(Pickup),
     CoordinateMediation(CoordinateMediation),
     DidExchange(DidExchange),
+    PushNotificationsFCM(PushNotificationsFCM),
 }
 
 impl DelayedSerde for AriesMessage {
@@ -200,6 +201,10 @@ impl DelayedSerde for AriesMessage {
                 DidExchangeV1_1::delayed_deserialize((msg_type, kind_str), deserializer)
                     .map(|x| AriesMessage::from(DidExchange::V1_1(x)))
             }
+            Protocol::PushNotificationsFCMType(msg_type) => {
+                PushNotificationsFCM::delayed_deserialize((msg_type, kind_str), deserializer)
+                    .map(From::from)
+            }
         }
     }
 
@@ -225,6 +230,7 @@ impl DelayedSerde for AriesMessage {
             Self::CoordinateMediation(v) => v.delayed_serialize(serializer),
             Self::DidExchange(DidExchange::V1_0(v)) => v.delayed_serialize(serializer),
             Self::DidExchange(DidExchange::V1_1(v)) => v.delayed_serialize(serializer),
+            Self::PushNotificationsFCM(v) => v.delayed_serialize(serializer),
         }
     }
 }

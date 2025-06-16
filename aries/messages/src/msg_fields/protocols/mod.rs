@@ -13,3 +13,4 @@ pub mod report_problem;
 pub mod revocation;
 pub mod routing;
 pub mod trust_ping;
+pub mod push_notifications_fcm;
